@@ -116,17 +116,19 @@ def run_task_build():
             args.append('target_os="{0}"'.format(target["pdfium_os"]))
             args.append('target_cpu="{0}"'.format(target["target_cpu"]))
             args.append("use_goma=false")
-            args.append("is_debug={0}".format(arg_is_debug))
+            args.append("is_debug=false")
             args.append("pdf_use_skia=false")
             args.append("pdf_use_skia_paths=false")
             args.append("pdf_enable_xfa=false")
             args.append("pdf_enable_v8=false")
-            args.append("is_component_build=true")
+            args.append("is_component_build=false")
             args.append("pdf_is_standalone=true")
+            args.append("pdf_is_complete_lib = true")
             args.append("pdf_bundle_freetype=true")
+            args.append("is_official_build=true")
 
             if config == "release":
-                args.append("symbol_level=0")
+                args.append("symbol_level=1")
 
             args_str = " ".join(args)
 
@@ -178,15 +180,23 @@ def run_task_install():
             out_dir = "{0}-{1}-{2}".format(
                 config, target["target_os"], target["target_cpu"]
             )
-            library_dir = os.path.join("build", "android", "pdfium", "out", out_dir)
+            library_dir = os.path.join("build", "android", "pdfium", "out", out_dir, "obj")
+            third_party_library_dir = os.path.join("build", "android", "pdfium", "out", out_dir, "obj", "third_party")
             target_dir = os.path.join("build", "android", config, target["android_cpu"])
 
             f.remove_dir(target_dir)
             f.create_dir(target_dir)
 
             for basename in os.listdir(library_dir):
-                if basename.endswith(".so"):
+                if basename.endswith(".a"):
                     pathname = os.path.join(library_dir, basename)
+
+                    if os.path.isfile(pathname):
+                        shutil.copy2(pathname, target_dir)
+
+            for basename in os.listdir(third_party_library_dir):
+                if basename.endswith(".a"):
+                    pathname = os.path.join(third_party_library_dir, basename)
 
                     if os.path.isfile(pathname):
                         shutil.copy2(pathname, target_dir)
